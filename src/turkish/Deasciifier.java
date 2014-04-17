@@ -1,13 +1,16 @@
 package turkish;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 
@@ -331,24 +334,19 @@ public class Deasciifier {
 	}
 
 	public static String readFromFile(String filePath) {
-		StringBuilder s = new StringBuilder();
-		File f = new File(filePath);
-
-		Scanner scan;
+		Path path = FileSystems.getDefault().getPath(filePath);
 		try {
-			scan = new Scanner(f);
-			while (scan.hasNext()) {
-				String line = scan.nextLine();
-				if (line != null) {
-					s.append(line); // + "\n" ?
-				}
-			}
-			scan.close();
-		} catch (FileNotFoundException e) {
-			System.out.println(e);
+			List<String> lines = Files.readAllLines(path);
+			StringBuilder fileContent = new StringBuilder();
+			for(String line : lines) {
+			fileContent.append(line + '\n');
+		}
+		String content = fileContent.toString();
+		return content.substring(0, content.length() - 1);
+		} catch(IOException e) {
 			e.printStackTrace();
 		}
-		return s.toString();
+		return null;
 	}
 
 	public static void savePatternTable(String filename) {
