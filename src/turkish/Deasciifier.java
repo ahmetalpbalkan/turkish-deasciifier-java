@@ -1,15 +1,17 @@
 package turkish;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
-import java.util.Scanner;
 
 /**
  * This class provides functionality to deasciify a given ASCII based Turkish
@@ -47,9 +49,9 @@ import java.util.Scanner;
 public class Deasciifier {
 
 	static int turkishContextSize = 10;
-	
+
 	static HashMap<String, HashMap<String, Integer>> turkishPatternTable = null;
-	
+
 	static HashMap<String, String> turkishAsciifyTable = new HashMap<String, String>();
 	static {
 		turkishAsciifyTable.put("ç", "c");
@@ -72,28 +74,30 @@ public class Deasciifier {
 	static {
 		for (String c : uppercaseLetters) {
 			turkishDowncaseAsciifyTable.put(c, c.toLowerCase(Locale.US));
-			turkishDowncaseAsciifyTable.put(c.toLowerCase(Locale.US), c.toLowerCase(Locale.US));
+			turkishDowncaseAsciifyTable.put(c.toLowerCase(Locale.US),
+					c.toLowerCase(Locale.US));
 		}
 
-        turkishDowncaseAsciifyTable.put("ç", "c");
-        turkishDowncaseAsciifyTable.put("Ç", "c");
-        turkishDowncaseAsciifyTable.put("ğ", "g");
-        turkishDowncaseAsciifyTable.put("Ğ", "g");
-        turkishDowncaseAsciifyTable.put("ö", "o");
-        turkishDowncaseAsciifyTable.put("Ö", "o");
-        turkishDowncaseAsciifyTable.put("ı", "i");
-        turkishDowncaseAsciifyTable.put("İ", "i");
-        turkishDowncaseAsciifyTable.put("ş", "s");
-        turkishDowncaseAsciifyTable.put("Ş", "s");
-        turkishDowncaseAsciifyTable.put("ü", "u");
-        turkishDowncaseAsciifyTable.put("Ü", "u");
+		turkishDowncaseAsciifyTable.put("ç", "c");
+		turkishDowncaseAsciifyTable.put("Ç", "c");
+		turkishDowncaseAsciifyTable.put("ğ", "g");
+		turkishDowncaseAsciifyTable.put("Ğ", "g");
+		turkishDowncaseAsciifyTable.put("ö", "o");
+		turkishDowncaseAsciifyTable.put("Ö", "o");
+		turkishDowncaseAsciifyTable.put("ı", "i");
+		turkishDowncaseAsciifyTable.put("İ", "i");
+		turkishDowncaseAsciifyTable.put("ş", "s");
+		turkishDowncaseAsciifyTable.put("Ş", "s");
+		turkishDowncaseAsciifyTable.put("ü", "u");
+		turkishDowncaseAsciifyTable.put("Ü", "u");
 	}
 
 	static HashMap<String, String> turkishUpcaseAccentsTable = new HashMap<String, String>();
 	static {
 		for (String c : uppercaseLetters) {
 			turkishUpcaseAccentsTable.put(c, c.toLowerCase(Locale.US));
-			turkishUpcaseAccentsTable.put(c.toLowerCase(Locale.US), c.toLowerCase(Locale.US));
+			turkishUpcaseAccentsTable.put(c.toLowerCase(Locale.US),
+					c.toLowerCase(Locale.US));
 		}
 
 		turkishUpcaseAccentsTable.put("ç", "C");
@@ -138,7 +142,6 @@ public class Deasciifier {
 		turkishToggleAccentTable.put("Ş", "S");
 	}
 
-
 	private String asciiString;
 	private String turkishString;
 
@@ -166,8 +169,8 @@ public class Deasciifier {
 	}
 
 	public static String setCharAt(String mystr, int pos, String c) {
-		return mystr.substring(0, pos).concat(c).concat(
-				mystr.substring(pos + 1, mystr.length()));
+		return mystr.substring(0, pos).concat(c)
+				.concat(mystr.substring(pos + 1, mystr.length()));
 	}
 
 	public String turkishToggleAccent(String c) {
@@ -263,8 +266,7 @@ public class Deasciifier {
 					space = true;
 				}
 			} else {
-				s
-                        = setCharAt(s, i, x);
+				s = setCharAt(s, i, x);
 				i--;
 				space = false;
 			}
@@ -281,7 +283,8 @@ public class Deasciifier {
 		if (tr == null)
 			tr = ch;
 
-		HashMap<String, Integer> pl = turkishPatternTable.get(tr.toLowerCase(Locale.US));
+		HashMap<String, Integer> pl = turkishPatternTable.get(tr
+				.toLowerCase(Locale.US));
 
 		boolean m = false;
 		if (pl != null) {
@@ -331,24 +334,20 @@ public class Deasciifier {
 	}
 
 	public static String readFromFile(String filePath) {
-		StringBuilder s = new StringBuilder();
-		File f = new File(filePath);
-
-		Scanner scan;
+		Path path = FileSystems.getDefault().getPath(filePath);
 		try {
-			scan = new Scanner(f);
-			while (scan.hasNext()) {
-				String line = scan.nextLine();
-				if (line != null) {
-					s.append(line); // + "\n" ?
-				}
-			}
-			scan.close();
-		} catch (FileNotFoundException e) {
-			System.out.println(e);
+			List<String> lines = Files.readAllLines(path);
+			StringBuilder fileContent = new StringBuilder();
+			
+			for (String line : lines)
+				fileContent.append(line + '\n');
+			
+			String content = fileContent.toString();
+			return content.substring(0, content.length() - 1);
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return s.toString();
+		return null;
 	}
 
 	public static void savePatternTable(String filename) {
@@ -362,37 +361,40 @@ public class Deasciifier {
 			e.printStackTrace();
 		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
-	public void loadPatternTable(){
-		if (turkishPatternTable != null) return;
-		
+	public void loadPatternTable() {
+		if (turkishPatternTable != null)
+			return;
+
 		turkishPatternTable = new HashMap<String, HashMap<String, Integer>>();
-		InputStream is = this.getClass().getResourceAsStream("/turkishPatternTable");
-		
+		InputStream is = this.getClass().getResourceAsStream(
+				"/turkishPatternTable");
+
 		try {
 			ObjectInputStream ois = new ObjectInputStream(is);
-			
-			turkishPatternTable = (HashMap<String, HashMap<String, Integer>>) ois.readObject();
+
+			turkishPatternTable = (HashMap<String, HashMap<String, Integer>>) ois
+					.readObject();
 			ois.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
-//	public static void loadPatternTableFromJsonFile(String filename){
-//		turkishPatternTable = new HashMap<String, HashMap<String, Integer>>();
-//		
-//		String fc = readFromFile(filename);
-//		JSON j = JSON.parse(fc);
-//
-//		for (String letter : j.keySet()) {
-//			HashMap<String, Integer> hm = new HashMap<String, Integer>();
-//			for (String rec : j.get(letter).keySet()) {
-//				hm.put(rec, j.get(letter).get(rec).asInt());
-//			}
-//			turkishPatternTable.put(letter, hm);
-//		}
-//	}
+
+	// public static void loadPatternTableFromJsonFile(String filename){
+	// turkishPatternTable = new HashMap<String, HashMap<String, Integer>>();
+	//
+	// String fc = readFromFile(filename);
+	// JSON j = JSON.parse(fc);
+	//
+	// for (String letter : j.keySet()) {
+	// HashMap<String, Integer> hm = new HashMap<String, Integer>();
+	// for (String rec : j.get(letter).keySet()) {
+	// hm.put(rec, j.get(letter).get(rec).asInt());
+	// }
+	// turkishPatternTable.put(letter, hm);
+	// }
+	// }
 
 }
